@@ -5,6 +5,18 @@ const colorMode = useColorMode()
 const isMenuOpen = ref(false)
 const searchTerm = ref('')
 const isDark = computed(() => colorMode.value !== 'light')
+const { hasPrompt, isInstalled, install } = usePwaInstall()
+const isInstallHintOpen = ref(false)
+
+async function handleInstall() {
+  if (hasPrompt.value) {
+    await install()
+    isInstallHintOpen.value = false
+    return
+  }
+
+  isInstallHintOpen.value = !isInstallHintOpen.value
+}
 
 function toggleTheme() {
   colorMode.preference = isDark.value ? 'light' : 'dark'
@@ -18,6 +30,7 @@ function submitSearch() {
 
 watch(() => route.fullPath, () => {
   isMenuOpen.value = false
+  isInstallHintOpen.value = false
 })
 </script>
 
@@ -53,6 +66,24 @@ watch(() => route.fullPath, () => {
       </form>
 
       <div class="header__actions">
+        <div v-if="!isInstalled" class="header__install">
+          <button
+            type="button"
+            class="icon-button"
+            aria-label="Install app"
+            title="Install app"
+            :aria-expanded="isInstallHintOpen"
+            @click="handleInstall"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 4v10m0 0 4-4m-4 4-4-4M5 19h14" />
+            </svg>
+          </button>
+          <div v-if="isInstallHintOpen" class="install-hint" role="status">
+            <p class="install-hint__title">Install Wallpaper Studio</p>
+            <p class="install-hint__text">Open the browser menu and choose “Install app” or “Add to Home Screen”.</p>
+          </div>
+        </div>
         <button
           type="button"
           class="icon-button"
@@ -201,6 +232,35 @@ watch(() => route.fullPath, () => {
 
 .header__menu {
   display: none;
+}
+
+.header__install {
+  position: relative;
+}
+
+.install-hint {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  width: 260px;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 45%);
+}
+
+.install-hint__title {
+  margin-bottom: 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.install-hint__text {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
 }
 
 @media (max-width: 900px) {
